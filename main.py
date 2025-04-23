@@ -5,6 +5,9 @@
 #  / ____ \  | |____   _| |_  | |____  | |____ 
 # /_/    \_\  \_____| |_____| |______| |______|
 
+__version__ = "1.0.0"
+GITHUB_API_RELEASES = "https://api.github.com/repos/acieldes/MH-Morph-Manager/releases/latest"
+
 import os
 import csv
 import tkinter as tk
@@ -14,10 +17,14 @@ import time
 import keyboard    # pip install keyboard # type: ignore
 import pyperclip   # pip install pyperclip # type: ignore
 import mouse      # pip install mouse     # type: ignore
+import requests, sys, os, tempfile, webbrowser
+from tkinter import messagebox
 
 # —— File paths & Load Morphs —— #
 script_dir = os.path.dirname(os.path.abspath(__file__))
 morphs_path = os.path.join(script_dir, "Morphs.txt")
+icon_path = os.path.join(script_dir, "app.ico")
+
 Morphs = []
 try:
     with open(morphs_path, newline='', encoding='utf-8') as csvfile:
@@ -30,6 +37,32 @@ except FileNotFoundError:
 
 # —— Config —— #
 ActivationKey = 'x2'
+
+# —— Auto-Update —— #
+def check_for_updates():
+    try:
+        r = requests.get(GITHUB_API_RELEASES, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+        latest = data["tag_name"].lstrip("v")
+        if latest != __version__:
+            if messagebox.askyesno(
+                  "Update available",
+                  f"A new version ({latest}) is available.\nDownload and install?"
+               ):
+                # assume your .exe is the first asset:
+                url = data["assets"][0]["browser_download_url"]
+                dlpath = os.path.join(tempfile.gettempdir(), os.path.basename(url))
+                with requests.get(url, stream=True) as dl:
+                    dl.raise_for_status()
+                    with open(dlpath, "wb") as f:
+                        for chunk in dl.iter_content(1024*1024):
+                            f.write(chunk)
+                # launch installer/exe and quit:
+                os.startfile(dlpath)
+                sys.exit(0)
+    except Exception as e:
+        print("Update check failed:", e)
 
 # —— Tooltip Helper —— #
 class ToolTip:
@@ -120,9 +153,12 @@ def create_morph(name, morph_cmd, window):
     canvas.configure(scrollregion=canvas.bbox("all")); update_scrollbar_visibility()
     window.destroy()
 
+root = tk.Tk(); root.title("MH Morphing"); root.minsize(300,300); root.maxsize(300,600); root.iconbitmap(icon_path)
+
 # Open dialog to add morph
 def open_add_window():
     win = tk.Toplevel(root); win.title("Add New Morph"); win.resizable(False,False)
+    win.geometry(f"+{root.winfo_x()}+{root.winfo_y()}")
     ttk.Label(win, text="Name:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
     name_entry = ttk.Entry(win); name_entry.grid(row=0, column=1, padx=5, pady=5)
     ttk.Label(win, text="Morph:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
@@ -130,11 +166,12 @@ def open_add_window():
     create_btn = ttk.Button(win, text="Create",
         command=lambda: create_morph(name_entry.get(), morph_entry.get(), win))
     create_btn.grid(row=2, column=0, columnspan=2, pady=10)
-    win.grab_set(); win.focus()
+    win.grab_set(); win.focus(); win.iconbitmap(icon_path)
 
-# —— GUI Setup —— #
-root = tk.Tk(); root.title("MH Morphing"); root.minsize(300,300); root.maxsize(300,600)
-# Title
+if __name__ == "__main__":
+    check_for_updates()
+
+# —— GUI Setup —— Title
 title_var = tk.StringVar(value="No Morph is selected.")
 title_label = ttk.Label(root, textvariable=title_var, font=("Segoe UI",12))
 title_label.pack(pady=(10,5))
