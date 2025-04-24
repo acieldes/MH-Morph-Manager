@@ -1,1 +1,2 @@
 Name,Morph
+stupid,this fuck is stupid

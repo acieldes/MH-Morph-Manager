@@ -5,7 +5,7 @@ a = Analysis(
     ['C:\\Users\\shina\\OneDrive\\Documents\\GitHub\\MH-Morph-Manager\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\shina\\OneDrive\\Documents\\GitHub\\MH-Morph-Manager\\app.ico', '.'), ('C:\\Users\\shina\\OneDrive\\Documents\\GitHub\\MH-Morph-Manager\\Morphs.txt', '.')],
+    datas=[('C:\\Users\\shina\\OneDrive\\Documents\\GitHub\\MH-Morph-Manager\\app.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
