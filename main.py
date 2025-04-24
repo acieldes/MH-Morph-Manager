@@ -5,7 +5,7 @@
 #  / ____ \  | |____   _| |_  | |____  | |____ 
 # /_/    \_\  \_____| |_____| |______| |______|
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 GITHUB_API_RELEASES = (
     "https://api.github.com/repos/acieldes/MH-Morph-Manager/releases/latest"
 )
@@ -141,20 +141,37 @@ class ToolTip:
 
 # ─── Update Checker ─────────────────────────────────────────────────────────────
 def check_for_updates():
+    """Download & launch the latest release into the current app folder."""
     try:
         resp = requests.get(GITHUB_API_RELEASES, timeout=5)
         resp.raise_for_status()
         data = resp.json()
         latest = data["tag_name"].lstrip("v")
         if latest != __version__:
-            if messagebox.askyesno("Update Available", f"New version {latest} available. Install now?" ):
-                asset = data["assets"][0]["browser_download_url"]
-                dest = os.path.join(tempfile.gettempdir(), os.path.basename(asset))
-                with requests.get(asset, stream=True) as dl:
+            if messagebox.askyesno(
+                "Update Available",
+                f"New version v{latest} is available. Install now?"
+            ):
+                asset_url = data["assets"][0]["browser_download_url"]
+                exe_name   = os.path.basename(asset_url)
+
+                # ─── determine where to put the installer ─────────────────────
+                if getattr(sys, "frozen", False):
+                    install_dir = os.path.dirname(sys.executable)
+                else:
+                    install_dir = BASE_DIR
+
+                dest_path = os.path.join(install_dir, exe_name)
+
+                # ─── download directly into install_dir ───────────────────────
+                with requests.get(asset_url, stream=True) as dl:
                     dl.raise_for_status()
-                    with open(dest, "wb") as f:
-                        for chunk in dl.iter_content(1024*1024): f.write(chunk)
-                os.startfile(dest)
+                    with open(dest_path, "wb") as f:
+                        for chunk in dl.iter_content(1024 * 1024):
+                            f.write(chunk)
+
+                # ─── launch the new installer and quit ────────────────────────
+                os.startfile(dest_path)
                 sys.exit(0)
     except Exception as e:
         print("Update check failed:", e)
