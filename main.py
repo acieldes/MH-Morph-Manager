@@ -5,7 +5,7 @@
 #  / ____ \  | |____   _| |_  | |____  | |____ 
 # /_/    \_\  \_____| |_____| |______| |______|
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 GITHUB_API_RELEASES = (
     "https://api.github.com/repos/acieldes/MH-Morph-Manager/releases/latest"
 )
@@ -53,9 +53,9 @@ os.makedirs(USER_DIR, exist_ok=True)
 
 # Paths
 BUNDLED_MORPHS = os.path.join(BASE_DIR, "Morphs.txt")
-USER_MORPHS = os.path.join(USER_DIR, "Morphs.txt")
-SETTINGS_FILE = os.path.join(USER_DIR, "settings.json")
-ICON_FILE = os.path.join(BASE_DIR, "app.ico")
+USER_MORPHS    = os.path.join(USER_DIR, "Morphs.txt")
+SETTINGS_FILE  = os.path.join(USER_DIR, "settings.json")
+ICON_FILE      = os.path.join(BASE_DIR, "app.ico")
 
 # On first run copy defaults
 if getattr(sys, 'frozen', False) and not os.path.exists(USER_MORPHS):
@@ -143,17 +143,16 @@ class ToolTip:
 def check_for_updates():
     """Download & launch the latest release into the current app folder."""
     try:
-        resp = requests.get(GITHUB_API_RELEASES, timeout=5)
-        resp.raise_for_status()
-        data = resp.json()
+        resp   = requests.get(GITHUB_API_RELEASES, timeout=5); resp.raise_for_status()
+        data   = resp.json()
         latest = data["tag_name"].lstrip("v")
         if latest != __version__:
             if messagebox.askyesno(
                 "Update Available",
-                f"New version v{latest} is available. Install now?"
+                f"New version is available. Install now?\nYour version: v{__version__}; Latest version: v{latest}."
             ):
                 asset_url = data["assets"][0]["browser_download_url"]
-                exe_name   = os.path.basename(asset_url)
+                exe_name  = os.path.basename(asset_url)
 
                 # ─── determine where to put the installer ─────────────────────
                 if getattr(sys, "frozen", False):
@@ -282,8 +281,6 @@ def open_settings_window():
     dur_entry = ttk.Entry(win, textvariable=duration_var)
     dur_entry.grid(row=1, column=1, padx=5, pady=5)
 
-    _SettingAction["ActivationKeyListener"] = False
-
     def save_and_close():
         global ActivationKey, WaitDuration
         new_key = key_var.get()
@@ -300,7 +297,6 @@ def open_settings_window():
             win.destroy()
         except ValueError as err:
             messagebox.showerror("Invalid Input", str(err))
-        _SettingAction["ActivationKeyListener"] = True
 
     ttk.Button(win, text="Save", command=save_and_close).grid(row=2, column=0, columnspan=2, pady=10)
     win.grab_set()
@@ -366,10 +362,9 @@ if __name__ == "__main__":
     check_for_updates()
 
     root = tk.Tk()
-    root.title("MH Morph Manager")
+    root.title(f"MH Morph Manager (v{__version__})")
     root.iconbitmap(ICON_FILE)
-    root.minsize(300, 300)
-    root.maxsize(500, 600)
+    root.minsize(300, 300); root.maxsize(500, 600)
 
     # Title above scroll only
     title_var = tk.StringVar(value="No Morph selected.")
